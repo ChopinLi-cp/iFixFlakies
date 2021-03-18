@@ -49,6 +49,7 @@ in [Automatically setting up the pom.xml for iFixFlakies](#automatically-setting
             </dependencies>
             <configuration>
                 <className>edu.illinois.cs.dt.tools.fixer.CleanerFixerPlugin</className>
+                <className>edu.illinois.cs.dt.tools.fixer.PolluterPlugin</className>
             </configuration>
         </plugin>
     </plugins>
