@@ -53,7 +53,7 @@ public class PolluterResult {
     }
 
     public void save() {
-        final Path outputPath = PolluterPathManager.fixer(dependentTest() + ".json");
+        final Path outputPath = PolluterPathManager.polluter(dependentTest() + ".json");
 
         try {
             Files.createDirectories(outputPath.getParent());

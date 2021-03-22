@@ -48,9 +48,8 @@ public class PolluterPlugin extends TestPlugin {
 
     private List<Patch> patches;
 
-    // Some fields to help with computing time to first cleaner and outputing in log
+    // Some fields to help with computing time to first polluter and outputting in log
     private long startTime;
-    private boolean foundFirst;
 
     // Don't delete. Need a default constructor for TestPlugin
     public PolluterPlugin() {
@@ -267,8 +266,6 @@ public class PolluterPlugin extends TestPlugin {
         Optional<JavaMethod> polluterMethodOpt;
         List<String> passingOrder;
 
-        List<String> cleanerTestNames = new ArrayList<>();  // Can potentially work with many cleaners, try them all
-
         String victimTestName = minimized.dependentTest();
         Optional<JavaMethod> victimMethodOpt = JavaMethod.find(victimTestName, testFiles, classpath());
         if (!victimMethodOpt.isPresent()) {
@@ -278,9 +275,9 @@ public class PolluterPlugin extends TestPlugin {
             return patchResults;
         }
 
-        // If dealing with a case of result with failure, then get standard cleaner logic from it
+        // If dealing with a case of result with failure, then get standard polluter logic from it
         if (!minimized.expected().equals(Result.PASS)) {
-            // Failing order has both the dependent test and the dependencies
+            // Passing order is just the dependent test itself
             passingOrder = Collections.singletonList(minimized.dependentTest());
 
             polluterTestName = polluterData.deps().get(polluterData.deps().size() - 1); // If more than one polluter, want to potentially modify last one
@@ -297,9 +294,7 @@ public class PolluterPlugin extends TestPlugin {
             polluterTestName = null;    // No polluter if minimized order is passing
             polluterMethodOpt = Optional.ofNullable(null);
 
-            cleanerTestNames.add(polluterData.deps().get(0));   // Assume only one, get first...
-
-            // Failing order should be just the dependent test by itself (as is the full failing order (for now))
+            // Failing order should be null
             passingOrder = null;
         }
 
@@ -500,7 +495,7 @@ public class PolluterPlugin extends TestPlugin {
     }
 
     private JavaMethod addHelperMethod(JavaMethod polluterMethod, JavaMethod methodToModify, boolean newTestClass) throws Exception {
-        // The modification is to modify the cleaner class to add a helper, then have the other method call the helper
+        // The modification is to modify the polluter class to add a helper, then have the other method call the helper
         ExpressionStmt helperCallStmt = getHelperCallStmt(polluterMethod, newTestClass);
         methodToModify.prepend(NodeList.nodeList(helperCallStmt));
 
@@ -526,7 +521,7 @@ public class PolluterPlugin extends TestPlugin {
             NodeList<Statement> otherPolluterStmts = NodeList.nodeList(polluterStmts);
             int j = 0;
             for (int i = 0; i < allStatements.size(); i++) {
-                // Do not include the statement if we see it from the cleaner statements
+                // Do not include the statement if we see it from the polluter statements
                 if (otherPolluterStmts.contains(allStatements.get(i))) {
                     otherPolluterStmts.remove(allStatements.get(i));
                 } else {
@@ -534,13 +529,13 @@ public class PolluterPlugin extends TestPlugin {
                 }
             }
 
-            // If the stripped statements is still the same as all statements, then the cleaner statements must all be in @Before/After
+            // If the stripped statements is still the same as all statements, then the polluter statements must all be in @Before/After
             if (strippedStatements.equals(allStatements)) {
                 TestPluginPlugin.info("All polluter statements must be in setup/teardown.");
                 return PolluteStatus.FIX_INLINE_SETUPTEARDOWN;  // Indicating statements were in setup/teardown
             }
 
-            // Set the cleaner method body to be the stripped version
+            // Set the polluter method body to be the stripped version
             restore(polluterMethod.javaFile());
             polluterMethod = JavaMethod.find(polluterMethod.methodName(), testSources(), classpath()).get();    // Reload, just in case
             polluterMethod.method().setBody(new BlockStmt(strippedStatements));
@@ -566,9 +561,6 @@ public class PolluterPlugin extends TestPlugin {
                 return PolluteStatus.NOD;   // Indicating did not work (TODO: Make it more clear)
             }
 
-            //// Restore the state
-            //restore(cleanerMethod.javaFile());
-            //cleanerMethod = JavaMethod.find(cleanerMethod.methodName(), testSources(), classpath()).get();    // Reload, just in case
             return PolluteStatus.FIX_INLINE_CANREMOVE;  // Indicating statements can be removed
         } finally {
             // Restore the state
@@ -655,7 +647,7 @@ public class PolluterPlugin extends TestPlugin {
             //JavaMethod helperMethod = addHelperMethod(cleanerMethod, auxiliaryMethodToModify, newTestClass, prepend);
             JavaMethod helperMethod = addHelperMethod(polluterMethod, methodToModify, newTestClass);
 
-            // Check if applying these cleaners on the method suffices
+            // Check if applying these polluters on the method suffices
             TestPluginPlugin.info("Applying code from polluter and recompiling.");
             PolluterDeltaDebugger debugger = new PolluterDeltaDebugger(this.project, this.runner, helperMethod, passingOrder);
             if (debugger.checkValid(polluterStmts, false)) {
@@ -675,7 +667,7 @@ public class PolluterPlugin extends TestPlugin {
 
     }
 
-    // Returns if applying the fix was successful or not
+    // Returns if applying the polluter was successful or not
     private PatchResult applyPollute(final List<String> passingOrder,
                                  final JavaMethod polluterMethod,
                                  final JavaMethod victimMethod) throws Exception {
@@ -695,14 +687,14 @@ public class PolluterPlugin extends TestPlugin {
             }
             backup(victimMethod.javaFile());
             MvnCommands.runMvnInstall(this.project, false);
-            NodeList<Statement> initialCleanerStmts = makePolluterStatements(polluterMethod, victimMethod);
-            Path patch = writePatch(victimMethod, 0, new BlockStmt(initialCleanerStmts), statementsSize(initialCleanerStmts), null, polluterMethod, 0, "CLEANER DOES NOT FIX");
-            return new PatchResult(OperationTime.instantaneous(), PolluteStatus.CLEANER_FAIL, victimMethod.methodName(), "N/A", 0, patch.toString());
+            NodeList<Statement> initialPolluterStmts = makePolluterStatements(polluterMethod, victimMethod);
+            Path patch = writePatch(victimMethod, 0, new BlockStmt(initialPolluterStmts), statementsSize(initialPolluterStmts), null, polluterMethod, 0, "POLLUTER DOES NOT FIX");
+            return new PatchResult(OperationTime.instantaneous(), PolluteStatus.POLLUTER_FAIL, victimMethod.methodName(), "N/A", 0, patch.toString());
         }
         final JavaMethod finalHelperMethod = (JavaMethod)startingValues[1];
         final NodeList<Statement> polluterStmts = (NodeList<Statement>)startingValues[2];
 
-        // Minimizing cleaner code, which includes setup and teardown
+        // Minimizing polluter code, which includes setup and teardown
         TestPluginPlugin.info("Going to modify " + methodToModify.methodName() + " to make passing order fail.");
         final List<OperationTime> elapsedTime = new ArrayList<>();
         int originalsize = statementsSize(polluterStmts);
@@ -754,9 +746,9 @@ public class PolluterPlugin extends TestPlugin {
             } while(!interPolluterStmts.equals(currentInterPolluterStmts));
 
             return interPolluterStmts;
-        }, (finalCleanerStmts, time) -> {
+        }, (finalPolluterStmts, time) -> {
             elapsedTime.add(time);
-            return finalCleanerStmts;
+            return finalPolluterStmts;
         });
 
         int iterations = finalDebugger.getIterations();
@@ -907,7 +899,7 @@ public class PolluterPlugin extends TestPlugin {
         return stmts;
     }
 
-    // Helper method to create a patch file adding in the passed in block
+    // Helper method to create a patch file adding in the failed in block
     // Includes a bunch of extra information that may be useful
     private Path writePatch(JavaMethod victimMethod, int begin, BlockStmt blockStmt, int originalsize,
                             JavaMethod modifiedMethod,
@@ -919,8 +911,8 @@ public class PolluterPlugin extends TestPlugin {
         patchLines.add("MODIFIED FILE: " + (modifiedMethod == null ? "N/A" : modifiedMethod.javaFile().path()));
         patchLines.add("POLLUTER: " + (polluterMethod == null ? "N/A" : polluterMethod.methodName()));
         patchLines.add("POLLUTER FILE: " + (polluterMethod == null ? "N/A" : polluterMethod.javaFile().path()));
-        patchLines.add("ORIGINAL CLEANER SIZE: " + (originalsize == 0 ? "N/A" : String.valueOf(originalsize)));
-        patchLines.add("NEW CLEANER SIZE: " + (blockStmt != null ? String.valueOf(statementsSize(blockStmt.getStatements())) : "N/A"));
+        patchLines.add("ORIGINAL POLLUTER SIZE: " + (originalsize == 0 ? "N/A" : String.valueOf(originalsize)));
+        patchLines.add("NEW POLLUTER SIZE: " + (blockStmt != null ? String.valueOf(statementsSize(blockStmt.getStatements())) : "N/A"));
         patchLines.add("ELAPSED TIME: " + elapsedTime);
 
         // If there is a block to add (where it might not be if in error state and need to just output empty)
@@ -932,7 +924,7 @@ public class PolluterPlugin extends TestPlugin {
                 patchLines.add("+ " + line);
             }
         }
-        Path patchFile = PolluterPathManager.fixer().resolve(victimMethod.methodName() + ".patch");  // The patch file is based on the dependent test
+        Path patchFile = PolluterPathManager.polluter().resolve(victimMethod.methodName() + ".patch");  // The patch file is based on the dependent test
         Files.createDirectories(patchFile.getParent());
 
         // If the file exists, then need to give it a new name

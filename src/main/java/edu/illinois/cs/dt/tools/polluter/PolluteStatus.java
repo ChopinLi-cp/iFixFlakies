@@ -7,7 +7,7 @@ public enum PolluteStatus {
     MISSING_METHOD,
     NOT_FAILING,
     NO_CLEANER,
-    CLEANER_FAIL,
+    POLLUTER_FAIL,
     FIX_INVALID,
     FIX_NO_INLINE,
     FIX_INLINE,

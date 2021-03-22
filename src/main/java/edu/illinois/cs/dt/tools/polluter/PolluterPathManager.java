@@ -11,19 +11,19 @@ public class PolluterPathManager extends PathManager {
     public static final String BACKUP_EXTENSION = ".orig";
     public static final String PATCH_EXTENSION = ".patch";
 
-    public static final Path FIXER = Paths.get("fixer");
-    public static final Path FIXER_LOG = Paths.get("fixer.log");
+    public static final Path POLLUTER = Paths.get("polluter");
+    public static final Path POLLUTER_LOG = Paths.get("polluter.log");
 
-    public static Path fixer() {
-        return path(FIXER);
+    public static Path polluter() {
+        return path(POLLUTER);
     }
 
-    public static Path fixer(final Path relative) {
-        return path(FIXER.resolve(relative));
+    public static Path polluter(final Path relative) {
+        return path(POLLUTER.resolve(relative));
     }
 
-    public static Path fixer(final String dependentTest) {
-        return fixer(Paths.get(dependentTest));
+    public static Path polluter(final String dependentTest) {
+        return polluter(Paths.get(dependentTest));
     }
 
     public static Path backupPath(final Path path) {

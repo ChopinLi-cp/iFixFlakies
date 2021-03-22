@@ -28,7 +28,7 @@ public class JavaMethod {
             throws IOException {
         for (final Path file : files) {
             if (Files.exists(file) && FilenameUtils.isExtension(file.getFileName().toString(), "java")) {
-                final JavaFile javaFile = JavaFile.loadFile(file, classpath, CleanerPathManager.compiledPath(file).getParent());
+                final JavaFile javaFile = JavaFile.loadFile(file, classpath, PolluterPathManager.compiledPath(file).getParent());
 
                 final MethodDeclaration methodDeclaration = javaFile.findMethodDeclaration(methodName);
 
@@ -68,7 +68,7 @@ public class JavaMethod {
         for (String superMethodName : superMethodNames) {
             for (final Path file : files) {
                 if (Files.exists(file) && FilenameUtils.isExtension(file.getFileName().toString(), "java")) {
-                    final JavaFile javaFile = JavaFile.loadFile(file, classpath, CleanerPathManager.compiledPath(file).getParent());
+                    final JavaFile javaFile = JavaFile.loadFile(file, classpath, PolluterPathManager.compiledPath(file).getParent());
 
                     final MethodDeclaration methodDeclaration = javaFile.findMethodDeclaration(superMethodName);
 
