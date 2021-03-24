@@ -309,8 +309,8 @@ public class JavaFile {
             compilationTask.call();
 
             // Move to compile output path
-            final Path compiledPath = CleanerPathManager.changeExtension(path(), "class");
-            final Path outputPath = CleanerPathManager.compiledPath(path());
+            final Path compiledPath = PolluterPathManager.changeExtension(path(), "class");
+            final Path outputPath = PolluterPathManager.compiledPath(path());
 
             System.out.println("[INFO] Compiling to " + outputPath);
             Files.move(compiledPath, outputPath, StandardCopyOption.REPLACE_EXISTING);
