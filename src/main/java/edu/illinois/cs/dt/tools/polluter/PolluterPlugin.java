@@ -208,46 +208,9 @@ public class PolluterPlugin extends TestPlugin {
             polluterDataOrder.addAll(pdWithDiffTestClass);
         } else {
             // If case of failing order with polluters, best bet is one that has a cleaner, and in same test class as victim
-            Set<PolluterData> pdNoCleaner = new HashSet<>();
-            Set<PolluterData> pdWithCleaner = new HashSet<>();
-            Set<PolluterData> pdWithSingleCleaner = new HashSet<>();
-            Set<PolluterData> pdWithSingleCleanerSameTestClassVictim = new HashSet<>();
-            Set<PolluterData> pdWithSingleCleanerSameTestClassPolluter = new HashSet<>();
             for (PolluterData pd : minimized.polluters()) {
-                // Consider if has a cleaner
-                if (!pd.cleanerData().cleaners().isEmpty()) {
-                    pdWithCleaner.add(pd);
-                    String polluter = pd.deps().get(pd.deps().size() - 1);  // If we're going to modify polluter, do it with the last one
-                    // Would be best to have a cleaner group that is only one test
-                    for (CleanerGroup cleanerGroup : pd.cleanerData().cleaners()) {
-                        if (cleanerGroup.cleanerTests().size() == 1) {
-                            pdWithSingleCleaner.add(pd);
-                            // Even more ideal, if the cleaner is in the same test class as victim
-                            String cleaner = cleanerGroup.cleanerTests().get(0);
-                            if (sameTestClass(cleaner, minimized.dependentTest())) {
-                                pdWithSingleCleanerSameTestClassVictim.add(pd);
-                            }
-                            // Also valid is if in the same test class as the polluter
-                            if (sameTestClass(cleaner, polluter)) {
-                                pdWithSingleCleanerSameTestClassPolluter.add(pd);
-                            }
-                        }
-                    }
-                } else {
-                    pdNoCleaner.add(pd);
-                }
+                    polluterDataOrder.add(pd);
             }
-            // Remove from each level duplicates
-            pdWithCleaner.removeAll(pdWithSingleCleaner);
-            pdWithSingleCleaner.removeAll(pdWithSingleCleanerSameTestClassVictim);
-            pdWithSingleCleaner.removeAll(pdWithSingleCleanerSameTestClassPolluter);
-            pdWithSingleCleanerSameTestClassVictim.removeAll(pdWithSingleCleanerSameTestClassPolluter);
-            // Prioritize based on those levels
-            polluterDataOrder.addAll(pdWithSingleCleanerSameTestClassPolluter);
-            polluterDataOrder.addAll(pdWithSingleCleanerSameTestClassVictim);
-            polluterDataOrder.addAll(pdWithSingleCleaner);
-            polluterDataOrder.addAll(pdWithCleaner);
-            polluterDataOrder.addAll(pdNoCleaner);
         }
 
         for (PolluterData polluterData : polluterDataOrder) {
