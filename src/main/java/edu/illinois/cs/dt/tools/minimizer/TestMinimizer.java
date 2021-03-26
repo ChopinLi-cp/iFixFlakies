@@ -153,14 +153,14 @@ public class TestMinimizer extends FileCache<MinimizeTestsResult> {
             }
 
             // Only look for cleaners if the order is not passing; in case of minimizing for setter don't need to look for cleaner
-            CleanerData cleanerData;
-            if (!expected.equals(Result.PASS)) {
-                cleanerData = new CleanerFinder(runner, dependentTest, deps, expected, isolationResult, expectedRun.testOrder()).find();
-            } else {
-                cleanerData = new CleanerData(dependentTest, expected, isolationResult, new ListEx<CleanerGroup>());
-            }
+//            CleanerData cleanerData = null;
+//            if (!expected.equals(Result.PASS)) {
+//                cleanerData = new CleanerFinder(runner, dependentTest, deps, expected, isolationResult, expectedRun.testOrder()).find();
+//            } else {
+//                cleanerData = new CleanerData(dependentTest, expected, isolationResult, new ListEx<CleanerGroup>());
+//            }
 
-            polluters.add(new PolluterData(operationTime[0], index, deps, cleanerData));
+            polluters.add(new PolluterData(operationTime[0], index, deps));
   
             // If not configured to find all, since one is found now, can stop looking
             if (!FIND_ALL) {

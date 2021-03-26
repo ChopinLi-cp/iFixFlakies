@@ -21,7 +21,7 @@ public class PassingTestDetector {
         final Set<String> notFailingTests = new HashSet<>();
 
         if (tests.isEmpty()) {
-            return Optional.of(notFailingTests);
+            return Optional.empty();
         }
 
         final Try<TestRunResult> testRunResultTry = runner.runList(tests);

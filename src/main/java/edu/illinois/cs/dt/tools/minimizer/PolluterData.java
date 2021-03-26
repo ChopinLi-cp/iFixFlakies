@@ -11,13 +11,11 @@ public class PolluterData {
     private final OperationTime time;
     private final int index;            // The index of when this polluter was found (0 is first)
     private final List<String> deps;
-    private final CleanerData cleanerData;
 
-    public PolluterData(final OperationTime time, final int index, final List<String> deps, final CleanerData cleanerData) {
+    public PolluterData(final OperationTime time, final int index, final List<String> deps) {
         this.time = time;
         this.index = index;
         this.deps = deps;
-        this.cleanerData = cleanerData;
     }
 
     public OperationTime time() {
@@ -30,10 +28,6 @@ public class PolluterData {
 
     public List<String> deps() {
         return deps;
-    }
-
-    public CleanerData cleanerData() {
-        return cleanerData;
     }
 
     public List<String> withDeps(final String dependentTest) {
