@@ -646,9 +646,9 @@ public class PolluterPlugin extends TestPlugin {
         if (methodToModify == null) {   // If not method returned, means things are broken
             // Restore files back to what they were before and recompile, in preparation for later
             if (polluterMethod != null) {
-                backup(polluterMethod.javaFile());
+                restore(polluterMethod.javaFile());
             }
-            backup(victimMethod.javaFile());
+            restore(victimMethod.javaFile());
             MvnCommands.runMvnInstall(this.project, false);
             NodeList<Statement> initialPolluterStmts = makePolluterStatements(polluterMethod, victimMethod);
             Path patch = writePatch(victimMethod, 0, new BlockStmt(initialPolluterStmts), statementsSize(initialPolluterStmts), null, polluterMethod, 0, "POLLUTER DOES NOT FIX");
@@ -739,8 +739,9 @@ public class PolluterPlugin extends TestPlugin {
 
         // Do the check of removing cleaner statements from cleaner itself and see if the cleaner now starts failing
         TestPluginPlugin.info("Trying to remove statements from cleaner to see if it becomes order-dependent.");
-        PolluteStatus removalCheck = checkPolluterRemoval(passingOrder, victimMethod, minimalPolluterStmts);
+        // PolluteStatus removalCheck = checkPolluterRemoval(passingOrder, polluterMethod, minimalPolluterStmts);
 
+        PolluteStatus removalCheck = PolluteStatus.FIX_INLINE_CANREMOVE;
         // Figure out what the final fix status should be
         PolluteStatus polluteStatus;
         String status;

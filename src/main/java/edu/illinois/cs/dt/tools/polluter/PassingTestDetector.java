@@ -20,6 +20,9 @@ public class PassingTestDetector {
     public Optional<Set<String>> notFailingTests(final List<String> tests) {
         final Set<String> notFailingTests = new HashSet<>();
 
+        if (tests == null){
+            return Optional.empty();
+        }
         if (tests.isEmpty()) {
             return Optional.empty();
         }
